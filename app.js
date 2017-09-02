@@ -8,6 +8,8 @@ var path = require('path');
 var http = require('https');
 var AWS = require('aws-sdk');
 var process = require('process');
+var Consumer = require('sqs-consumer');
+var crypto = require('crypto');
 
 AWS.config.update({
    accessKeyId: process.env.API_KEY,
@@ -17,6 +19,15 @@ AWS.config.update({
 
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 var s3bucket = new AWS.S3({params: {Bucket: 'amberity-sandbox', ARN: 'arn:aws:s3:::amberity-sandbox'}});
+
+const cons = Consumer.create({
+   queueUrl: 'https://sqs.us-west-2.amazonaws.com/423136339728/amberity-sandbox.fifo',
+   handleMessage: (message, done) => {
+      console.log(message);
+      done();
+   },
+   sqs: new AWS.SQS()
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -61,18 +72,16 @@ app.post('/shippo', (req, res) => {
    };
    
    return new Promise((resolve, reject) => {
-      
       let msg = {
          addressTo: addressTo,
          addressFrom: addressFrom,
          parcel: parcel
       }
-      console.log(JSON.stringify(msg));
       let sqsParams = {
          MessageBody: JSON.stringify(msg),
          QueueUrl: 'https://sqs.us-west-2.amazonaws.com/423136339728/amberity-sandbox.fifo',
-         MessageGroupId: '423136339728',
-         MessageDeduplicationId: 'amberity-sandbox.fifo'
+         MessageGroupId: (Math.random()*1500).toString(),
+         MessageDeduplicationId: crypto.createHash('md5').update((Math.random()*1500).toString()).digest("base64")
       };
       sqs.sendMessage(sqsParams, (err, data) => {
          if (err) {
@@ -83,149 +92,112 @@ app.post('/shippo', (req, res) => {
          resolve(data);
       });
    }).then(data => {
-      console.log(data);
+      //console.log(data);
       res.redirect('/');
-      return new Promise((resolve, reject) => {
-         let sqsParams= {
-            QueueUrl: 'https://sqs.us-west-2.amazonaws.com/423136339728/amberity-sandbox.fifo',
-            "VisibilityTimeout": 30,
-         }
-         sqs.receiveMessage(sqsParams, (err, data) => {
-            if(err) {
-               console.log(err);
-               reject(err);     
-            } 
-            else {
-               console.log(data);
-               resolve(data);
-            } 
-         });
-      })
+//      return new Promise((resolve, reject) => {
+//         let sqsParams= {
+//            QueueUrl: 'https://sqs.us-west-2.amazonaws.com/423136339728/amberity-sandbox.fifo',
+//            "VisibilityTimeout": 30,
+//         }
+//         sqs.receiveMessage(sqsParams, (err, data) => {
+//            if(err) {
+//               console.log(err);
+//               reject(err);     
+//            } 
+//            else {
+//               console.log(data);
+//               resolve(data);
+//            } 
+//         });
+//      })
    })
 });
 
 
+cons.on('error', err => {
+   console.log("ERROR");
+   console.log(err.message);
+});
 
-//app.post('/shippo', (req, res) => {
-//   let body = req.body;
-//   let addressTo = {
-//      "name": body.toName,
-//      "street1": body.toStreet,
-//      "city": body.toCity,
-//      "state": body.toState,
-//      "zip": body.toZip,
-//      "country": body.toCountry,
-//      "phone": body.toPhone,
-//      "email": body.toEmail
-//   };
-//   let addressFrom = {
-//      "name": body.fromName,
-//      "street1": body.fromStreet,
-//      "city": body.fromCity,
-//      "state": body.fromState,
-//      "zip": body.fromZip,
-//      "country": body.fromCountry,
-//      "phone": body.fromPhone,
-//      "email": body.fromEmail
-//   };
-//   let parcel = {
-//      "length": body.length,
-//      "width": body.width,
-//      "height": body.height,
-//      "distance_unit": body.distance_unit,
-//      "weight": body.weight,
-//      "mass_unit": body.mass_unit
-//   };
-//
-//   return new Promise((resolve, reject) => {
-//      shippo.shipment.create({
-//         "address_from": addressFrom,
-//         "address_to": addressTo,
-//         "parcels": [parcel],
-//         "async": false
-//      }, function(err, shipment){
-//         if(err) {
-//            reject(err);
-//         }
-//         resolve(shipment);
-//      });
-//   }).then(shipment => {
-//      let rate = shipment.rates[0];
-//      return shippo.transaction.create({
-//         "rate": rate.object_id,
-//         "label_file_type": "PDF",
-//         "async": false
-//      }, (err, transaction) => {
-//         console.log(transaction);
-//         return transaction;
-//      });
-//   }).then(transaction => {
-//      let download = (url, dest, cb) => {
-//         var file = fs.createWriteStream(dest);
-//         var request = http.get(url, (response) => {
-//            response.pipe(file);
-//            file.on('finish', () => {
-//               file.close(cb);
-//            });
-//         }).on('error', err => {
-//            fs.unlink(dest);
-//            if (cb) cb(err.message);
-//         });
-//      };
-//      
-//      download(transaction.label_url, __dirname + '/example.pdf', err => {
-//         if(err) {
-//            console.log(err);
-//            res.status(500).send(err);
-//         }
-//      })
-//   }).then(() => {
-//      return new Promise((resolve, reject) => {
-//         fs.readFile(__dirname + '/example.pdf', (err, data) => {
-//            console.log('======PDF======');
-//            console.log(data);
-//            if (err) throw err;
-//            
-//            return s3bucket.createBucket(() => {
-//               var params = {
-//                  Key: 'example.pdf',
-//                  Body: data
-//               };
-//               return s3bucket.upload(params, (err, data) => {
-//                  fs.unlink(__dirname + '/example.pdf', (err) => {
-//                     if (err) {
-//                        console.error(err);
-//                     }
-//                  });
-//                  if (err) {
-//                     reject(err);
-//                  } else {
-//                     //console.log(data);
-//                     //res.redirect('/');
-//                     console.log(data);
-//                     resolve(data);
-//                  }
-//               });
-//            });
-//         });
-//      })
-//   }).then(data => {
-//      let s3 = data;
-//      let sqs = new AWS.SQS({apiVersion: '2012-11-05', QueueArn: 'arn:aws:sqs:us-west-2:423136339728:amberity-sandbox.fifo'});
-//      let sqsParams = {
-//         MessageBody: JSON.stringify(s3),
-//         QueueUrl: 'https://sqs.us-west-2.amazonaws.com/423136339728/amberity-sandbox.fifo'
-//      };
-//      sqs.sendMessage(sqsParams, (err, data) => {
-//         if (err) {
-//            console.log('ERR', err);
-//         }
-//         console.log(data);
-//         res.redirect('/');
-//      });
-//   })
-//})
+cons.on('message_received', message => {
+   if(message.Body) {
+      console.log('DONE');
+      let msg = JSON.parse(message.Body);
+      return new Promise((resolve, reject) => {
+         shippo.shipment.create({
+            "address_from": msg.addressFrom,
+            "address_to": msg.addressTo,
+            "parcels": [msg.parcel],
+            "async": false
+         }, function(err, shipment){
+            if(err) {
+               reject(err);
+            }
+            resolve(shipment);
+         });
+      }).then(shipment => {
+         let rate = shipment.rates[0];
+         return shippo.transaction.create({
+            "rate": rate.object_id,
+            "label_file_type": "PDF",
+            "async": false
+         }, (err, transaction) => {
+            console.log(transaction);
+            return transaction;
+         });
+      }).then(transaction => {
+         let download = (url, dest, cb) => {
+            var file = fs.createWriteStream(dest);
+            var request = http.get(url, (response) => {
+               response.pipe(file);
+               file.on('finish', () => {
+                  file.close(cb);
+               });
+            }).on('error', err => {
+               fs.unlink(dest);
+               if (cb) cb(err.message);
+            });
+         };
 
+         download(transaction.label_url, __dirname + '/example.pdf', err => {
+            if(err) {
+               console.log(err);
+               res.status(500).send(err);
+            }
+         })
+      }).then(() => {
+         return new Promise((resolve, reject) => {
+            fs.readFile(__dirname + '/example.pdf', (err, data) => {
+               console.log('======PDF======');
+               
+               if (err) throw err;
+
+               return s3bucket.createBucket(() => {
+                  var params = {
+                     Key: (Math.random()*1000).toString(),
+                     Body: data
+                  };
+                  return s3bucket.upload(params, (err, data) => {
+                     fs.unlink(__dirname + '/example.pdf', (err) => {
+                        if (err) {
+                           console.error(err);
+                        }
+                     });
+                     if (err) {
+                        reject(err);
+                     } else {
+                        console.log(data);
+                        resolve(data);
+                     }
+                  });
+               });
+            });
+         })
+      })
+   }
+});
+
+cons.start();
 
 server.listen(3000, () => {
    console.log('server start at 3000 port');

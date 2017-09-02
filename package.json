@@ -12,6 +12,8 @@
   "dependencies": {
     "aws-sdk": "^2.108.0",
     "body-parser": "^1.17.2",
-    "express": "^4.15.4"
+    "crypto": "^1.0.1",
+    "express": "^4.15.4",
+    "sqs-consumer": "^3.7.0"
   }
 }
