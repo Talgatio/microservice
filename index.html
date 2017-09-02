@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+      <!-- Optional theme -->
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+      <!-- Latest compiled and minified JavaScript -->
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+      <script
+              src="https://code.jquery.com/jquery-2.2.4.min.js"
+              integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+              crossorigin="anonymous"></script>
+   </head>
+   <body>
+      <div class="container">
+         <form class="form-horizontal" action="/shippo" method="POST" id="customer" role="form">
+            <h2>Address from</h2>
+            <div class="form-group">
+               <label for="inputEmail3" class="col-sm-2 control-label">Name</label>
+               <div class="col-sm-10">
+                  <input name="fromName" type="text" class="form-control" value="Shawn Ippotle" id="inputEmail3" placeholder="Name">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="inputPassword3" class="col-sm-2 control-label">Street</label>
+               <div class="col-sm-10">
+                  <input name="fromStreet" type="text" class="form-control" value="2920 Zoo Drive" id="inputPassword3" placeholder="Street">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="state" class="col-sm-2 control-label">State</label>
+               <div class="col-sm-10">
+                  <input name="fromState" type="text" class="form-control" value="CA" id="state" placeholder="State">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="state" class="col-sm-2 control-label">City</label>
+               <div class="col-sm-10">
+                  <input name="fromCity" type="text" class="form-control" value="San Diego" id="state" placeholder="City">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="zip" class="col-sm-2 control-label">Zip</label>
+               <div class="col-sm-10">
+                  <input name="fromZip" type="text" class="form-control" value="92101" id="zip" placeholder="Zip">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="country" class="col-sm-2 control-label">Country</label>
+               <div class="col-sm-10">
+                  <input name="fromCountry" type="text" value="US" class="form-control" id="country" placeholder="Country">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="phone" class="col-sm-2 control-label">Phone</label>
+               <div class="col-sm-10">
+                  <input name="fromPhone" type="text" value="+12345678" class="form-control" id="phone" placeholder="Phone">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="email" class="col-sm-2 control-label">Email</label>
+               <div class="col-sm-10">
+                  <input name="fromEmail" type="email" value="test@test.com" class="form-control" id="email" placeholder="Email">
+               </div>
+            </div>
+            <h2>Address to</h2>
+            <div class="form-group">
+               <label for="inputEmail3" class="col-sm-2 control-label">Name</label>
+               <div class="col-sm-10">
+                  <input name="toName" type="text" value="Dr. House" class="form-control" id="inputEmail3" placeholder="Name">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="inputPassword3" class="col-sm-2 control-label">Street</label>
+               <div class="col-sm-10">
+                  <input name="toStreet" type="text" value="215 Clayton St." class="form-control" id="inputPassword3" placeholder="Street">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="inputPassword3" class="col-sm-2 control-label">City</label>
+               <div class="col-sm-10">
+                  <input name="toCity" type="text" value="San Francisco" class="form-control" id="inputPassword3" placeholder="City">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="state" class="col-sm-2 control-label">State</label>
+               <div class="col-sm-10">
+                  <input name="toState" type="text" value="CA" class="form-control" id="state" placeholder="State">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="zip" class="col-sm-2 control-label">Zip</label>
+               <div class="col-sm-10">
+                  <input name="toZip" type="text" value="94117" class="form-control" id="zip" placeholder="Zip">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="country" class="col-sm-2 control-label">Country</label>
+               <div class="col-sm-10">
+                  <input name="toCountry" type="text" value="US" class="form-control" id="country" placeholder="Country">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="phone" class="col-sm-2 control-label">Phone</label>
+               <div class="col-sm-10">
+                  <input name="toPhone" type="text" value="+1 333 444 555 666" class="form-control" id="phone" placeholder="Phone">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="email" class="col-sm-2 control-label">Email</label>
+               <div class="col-sm-10">
+                  <input name="toEmail" type="email" value="test@test.net" class="form-control" id="email" placeholder="Email">
+               </div>
+            </div>
+            <h2>Parcel</h2>
+            <div class="form-group">
+               <label for="length" class="col-sm-2 control-label">Length</label>
+               <div class="col-sm-10">
+                  <input name="length" type="text" value="5" class="form-control" id="length" placeholder="Length">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="width" class="col-sm-2 control-label">Width</label>
+               <div class="col-sm-10">
+                  <input name="width" type="text" value="5" class="form-control" id="width" placeholder="Width">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="height" class="col-sm-2 control-label">Height</label>
+               <div class="col-sm-10">
+                  <input name="height" type="text" value="4" class="form-control" id="height" placeholder="Height">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="distance" class="col-sm-2 control-label">Distance Unit</label>
+               <div class="col-sm-10">
+                  <input name="distance_unit" type="text" value="in" class="form-control" id="distance" placeholder="Distance Unit">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="weight" class="col-sm-2 control-label">Weight</label>
+               <div class="col-sm-10">
+                  <input name="weight" type="text" value="2" class="form-control" id="weight" placeholder="Weight">
+               </div>
+            </div>
+            <div class="form-group">
+               <label for="mass_unit" class="col-sm-2 control-label">Mass Unit</label>
+               <div class="col-sm-10">
+                  <input name="mass_unit" value="lb" type="text" class="form-control" id="mass_unit" placeholder="Mass Unit">
+               </div>
+            </div>
+            <div class="form-group">
+               <div class="col-sm-offset-2 col-sm-10">
+                  <button type="submit" id="submit" class="btn btn-default">Send</button>
+               </div>
+            </div>
+         </form>
+      </div>
+   </body>
+</html>
