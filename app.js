@@ -1,11 +1,19 @@
-let express = require('express');
-let app = express();
-let server = require('http').Server(app);
-let shippo = require('shippo')('shippo_test_9e7a2600b3b9f50c9195402f974f5e6ddfcd0d49');
-let fs = require('fs');
-let bodyParser = require('body-parser');
-let path = require('path');
-let http = require('https');
+var express = require('express');
+var app = express();
+var server = require('http').Server(app);
+var shippo = require('shippo')('shippo_test_9e7a2600b3b9f50c9195402f974f5e6ddfcd0d49');
+var fs = require('fs');
+var bodyParser = require('body-parser');
+var path = require('path');
+var http = require('https');
+var AWS = require('aws-sdk');
+var process = require('process');
+
+AWS.config.update({
+   accessKeyId: process.env.API_KEY,
+   secretAccessKey: process.env.SECRET_KEY,
+   "region": "us-west-2"
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -59,35 +67,62 @@ app.post('/shippo', (req, res) => {
          if(err) {
             reject(err);
          }
-         //console.log(shipment);
          resolve(shipment);
       });
    }).then(shipment => {
       let rate = shipment.rates[0];
-
       return shippo.transaction.create({
          "rate": rate.object_id,
          "label_file_type": "PDF",
          "async": false
-      }, function(err, transaction) {
+      }, (err, transaction) => {
          return transaction;
       });
    }).then(transaction => {
       let download = (url, dest, cb) => {
          var file = fs.createWriteStream(dest);
-         var request = http.get(url, function(response) {
+         var request = http.get(url, (response) => {
             response.pipe(file);
-            file.on('finish', function() {
-               file.close(cb);  // close() is async, call cb after close completes.
+            file.on('finish', () => {
+               file.close(cb);
             });
-         }).on('error', function(err) { // Handle errors
-            fs.unlink(dest); // Delete the file async. (But we don't check the result)
+         }).on('error', err => {
+            fs.unlink(dest);
             if (cb) cb(err.message);
          });
       };
-      download(transaction.label_url, __dirname + '/example.pdf', () => {
-         res.redirect('/');
+      
+      download(transaction.label_url, __dirname + '/example.pdf', err => {
+         if(err) {
+            console.log(err);
+            res.status(500).send(err);
+         }
       })
+   }).then(() => {
+      fs.readFile(__dirname + '/example.pdf', (err, data) => {
+         if (err) throw err;
+         var s3bucket = new AWS.S3({params: {Bucket: 'amberity-sandbox', ARN: 'arn:aws:s3:::amberity-sandbox'}});
+         s3bucket.createBucket(function () {
+            var params = {
+               Key: 'example.pdf',
+               Body: data
+            };
+            s3bucket.upload(params, (err, data) => {
+               fs.unlink(__dirname + '/example.pdf', (err) => {
+                  if (err) {
+                     console.error(err);
+                  }
+               });
+               if (err) {
+                  console.log('ERROR MSG: ', err);
+                  res.status(500).send(err);
+               } else {
+                  console.log('Success');
+                  res.redirect('/');
+               }
+            });
+         });
+      });
    })
 })
 

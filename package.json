@@ -10,6 +10,7 @@
   "author": "Talgat Nesipbaiev",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.108.0",
     "body-parser": "^1.17.2",
     "express": "^4.15.4"
   }
