@@ -102,7 +102,7 @@ app.post('/shippo', (req, res) => {
       fs.readFile(__dirname + '/example.pdf', (err, data) => {
          if (err) throw err;
          var s3bucket = new AWS.S3({params: {Bucket: 'amberity-sandbox', ARN: 'arn:aws:s3:::amberity-sandbox'}});
-         s3bucket.createBucket(function () {
+         s3bucket.createBucket(() => {
             var params = {
                Key: 'example.pdf',
                Body: data
