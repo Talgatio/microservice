@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
    res.sendFile(__dirname + '/index.html');
 });
 
-app.post('/shippo', (req, res) => {
+app.post('/sendMessageToSqs', (req, res) => {
    let body = req.body;
    let addressTo = {
       "name": body.toName,
@@ -88,28 +88,10 @@ app.post('/shippo', (req, res) => {
             console.log('ERR', err);
             reject(err);
          }
-         //console.log(data);
          resolve(data);
       });
    }).then(data => {
-      //console.log(data);
       res.redirect('/');
-//      return new Promise((resolve, reject) => {
-//         let sqsParams= {
-//            QueueUrl: 'https://sqs.us-west-2.amazonaws.com/423136339728/amberity-sandbox.fifo',
-//            "VisibilityTimeout": 30,
-//         }
-//         sqs.receiveMessage(sqsParams, (err, data) => {
-//            if(err) {
-//               console.log(err);
-//               reject(err);     
-//            } 
-//            else {
-//               console.log(data);
-//               resolve(data);
-//            } 
-//         });
-//      })
    })
 });
 
@@ -119,11 +101,12 @@ cons.on('error', err => {
    console.log(err.message);
 });
 
+//EventEmmiter listener for received messages from SQS
 cons.on('message_received', message => {
    if(message.Body) {
-      console.log('DONE');
       let msg = JSON.parse(message.Body);
       return new Promise((resolve, reject) => {
+         //Create Shipment
          shippo.shipment.create({
             "address_from": msg.addressFrom,
             "address_to": msg.addressTo,
@@ -136,16 +119,17 @@ cons.on('message_received', message => {
             resolve(shipment);
          });
       }).then(shipment => {
+         //Create transaction
          let rate = shipment.rates[0];
          return shippo.transaction.create({
             "rate": rate.object_id,
             "label_file_type": "PDF",
             "async": false
          }, (err, transaction) => {
-            console.log(transaction);
             return transaction;
          });
       }).then(transaction => {
+         //Download files function from remote server
          let download = (url, dest, cb) => {
             var file = fs.createWriteStream(dest);
             var request = http.get(url, (response) => {
@@ -158,7 +142,8 @@ cons.on('message_received', message => {
                if (cb) cb(err.message);
             });
          };
-
+         
+         //Download PDF file
          download(transaction.label_url, __dirname + '/example.pdf', err => {
             if(err) {
                console.log(err);
@@ -168,13 +153,13 @@ cons.on('message_received', message => {
       }).then(() => {
          return new Promise((resolve, reject) => {
             fs.readFile(__dirname + '/example.pdf', (err, data) => {
-               console.log('======PDF======');
-               
-               if (err) throw err;
-
+               if (err) {
+                  throw err;
+               }
+               //Upload PDF file ti s3
                return s3bucket.createBucket(() => {
                   var params = {
-                     Key: (Math.random()*1000).toString(),
+                     Key: (Math.random()*1000).toString() + '.pdf', //Generate unicue filename
                      Body: data
                   };
                   return s3bucket.upload(params, (err, data) => {
